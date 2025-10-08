@@ -16,7 +16,8 @@ Created for students who use Ai as a tutor - both online and offline.
 - Place it on your desktop
 - Double-click the file to launch
 - The app will open in your browser
-- Draw a bounding box
+- Drop in your image
+- Click and drag to draw a bounding box
 - Quickly add a label
 
 
