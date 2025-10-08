@@ -2,9 +2,9 @@
 
 <br>
 
-A minimalist desktop web based tool to quickly mark up images when chatting with a multimodal Ai model. Works offline. Double-click to launch. 
+A minimalist desktop web based tool to quickly mark up images with bounding boxes and labels when chatting with a multimodal Ai model. Works offline. Double-click to launch. 
 
-For a quick back-and-forth chat, a simple single-task tool means less friction.
+For a quick back-and-forth chat, a simple tool means less friction.
 
 Created for students who use Ai as a tutor - both online and offline. 
 
@@ -20,8 +20,7 @@ Created for students who use Ai as a tutor - both online and offline.
 - The app will open in your browser
 - Drop in your image
 - Click and drag to draw a bounding box
-- Quickly add a label
-- Use the marked-up image in your chat with an AI
+- Type in a label
 
 
 
