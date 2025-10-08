@@ -1,0 +1,443 @@
+<!--
+# Chat Image Marker
+# Creator: vbookshelf
+# GitHub: https://github.com/vbookshelf/Chat-Image-Marker
+# License: MIT
+# Version: 1.0
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chat Image Marker</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background: #0f172a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  header {
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  #controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  input[type="file"] {
+    display: none;
+  }
+  button {
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: white;
+    font-weight: 100;
+    font-size: 14px;
+    transition: background-color 0.2s;
+  }
+  button:hover {
+    background: #334155;
+  }
+  #canvasContainer {
+    border-radius: 8px;
+    overflow: hidden;
+    background: transparent;
+    border: 2px dashed #334155;
+    min-height: 100px;
+  }
+  canvas {
+    background: transparent;
+    max-width: 90vw;
+    max-height: 70vh;
+    cursor: crosshair;
+    display: block;
+  }
+  #dropOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.95);
+    color: white;
+    font-size: 32px;
+    font-weight: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  #dropOverlay.visible {
+    display: flex;
+    opacity: 1;
+  }
+  #dropOverlay::after {
+    content: '';
+    position: absolute;
+    inset: 40px;
+    border: 2px dashed #3b82f6;
+    border-radius: 20px;
+    pointer-events: none;
+  }
+  .instructions {
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    max-width: 600px;
+    line-height: 1.6;
+    transition: opacity 0.5s ease;
+  }
+  .icon {
+    margin-right: 6px;
+  }
+  #labelModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  #labelModal.visible {
+    display: flex;
+    opacity: 1;
+  }
+  .modal-content {
+    background: #1e293b;
+    padding: 24px;
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+  }
+  .modal-content p {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 16px;
+  }
+  .modal-content input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #3b82f6;
+    background: #0f172a;
+    color: white;
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+  .modal-content button {
+    background-color: #2563eb;
+    width: 100%;
+    border: none;
+  }
+</style>
+</head>
+<body>
+
+  <div id="controls">
+    <input type="file" id="fileInput" accept="image/*">
+    <button id="uploadBtn">Upload Image</button>
+    <button id="undoBtn">Undo Last Box</button>
+    <button id="downloadBtn">Download Image</button>
+  </div>
+  <div id="canvasContainer">
+    <canvas id="canvas"></canvas>
+  </div>
+  <div class="instructions">
+    Drop image here.<br>
+	Then click and drag to draw boxes.
+  </div>
+  <div id="dropOverlay">Drop your image here</div>
+
+  <div id="labelModal">
+    <div class="modal-content">
+      <p>Enter a label for this box</p>
+      <input type="text" id="labelInput" placeholder="Label...">
+      <button id="saveLabelBtn">Save Label</button>
+    </div>
+  </div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const fileInput = document.getElementById('fileInput');
+const uploadBtn = document.getElementById('uploadBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const undoBtn = document.getElementById('undoBtn');
+const dropOverlay = document.getElementById('dropOverlay');
+const labelModal = document.getElementById('labelModal');
+const labelInput = document.getElementById('labelInput');
+const saveLabelBtn = document.getElementById('saveLabelBtn');
+const instructions = document.querySelector('.instructions');
+const canvasContainer = document.getElementById('canvasContainer');
+
+let img = new Image();
+let imgLoaded = false;
+let boxes = [];
+let startX, startY, isDrawing = false;
+let currentBox = null;
+
+function fitImageToCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const maxW = window.innerWidth * 0.9;
+  const maxH = window.innerHeight * 0.7;
+
+  let scale = Math.min(maxW / img.width, maxH / img.height, 1);
+  const displayW = img.width * scale;
+  const displayH = img.height * scale;
+
+  canvas.style.width = displayW + 'px';
+  canvas.style.height = displayH + 'px';
+  canvas.width = displayW * dpr;
+  canvas.height = displayH * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.drawImage(img, 0, 0, displayW, displayH);
+}
+
+function drawBoxes() {
+  if (!imgLoaded) return;
+  const displayW = canvas.clientWidth;
+  const displayH = canvas.clientHeight;
+  
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0, displayW, displayH);
+  
+  ctx.lineWidth = 2;
+  ctx.font = "16px Arial";
+  boxes.forEach(b => {
+    ctx.strokeStyle = "#34d399";
+    ctx.strokeRect(b.x, b.y, b.w, b.h);
+    const text = b.label || "—";
+    const textW = ctx.measureText(text).width;
+    const textH = 16;
+    let tx = b.x;
+
+    // --- UPDATED LABEL POSITIONING LOGIC ---
+    // By default, label is above the box, touching the line
+    let textBaselineY = b.y - 2; // Baseline of text 2px above the box line
+    let rectY = b.y - textH - 4; // Top of the background rectangle
+
+    // If it overflows the top of the canvas, move it below the box
+    if (rectY < 0) {
+      textBaselineY = b.y + b.h + textH; // Baseline is below the box
+      rectY = b.y + b.h; // Top of rect is on the bottom box line
+    }
+    // --- END OF UPDATE ---
+
+    if (tx + textW > displayW) tx = displayW - textW - 4;
+    ctx.fillStyle = "rgba(52,211,153,0.95)";
+    ctx.fillRect(tx - 2, rectY, textW + 4, textH + 4);
+    ctx.fillStyle = "#042018";
+    ctx.fillText(text, tx, textBaselineY);
+  });
+}
+
+function loadImageSrc(src) {
+  img = new Image();
+  img.onload = () => {
+    imgLoaded = true;
+    fitImageToCanvas();
+    boxes = [];
+    instructions.style.opacity = '0';
+    instructions.style.pointerEvents = 'none';
+    canvasContainer.style.border = 'none';
+  };
+  img.src = src;
+}
+
+function showLabelModal() {
+  labelModal.classList.add('visible');
+  labelInput.focus();
+}
+
+function hideLabelModal() {
+  labelModal.classList.remove('visible');
+  labelInput.value = '';
+  currentBox = null;
+}
+
+function saveLabel() {
+    if (!currentBox) return;
+    currentBox.label = labelInput.value || "";
+    boxes.push(currentBox);
+    hideLabelModal();
+    drawBoxes();
+}
+
+saveLabelBtn.addEventListener('click', saveLabel);
+labelInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    saveLabel();
+  }
+});
+
+uploadBtn.addEventListener('click', () => {
+  fileInput.click();
+});
+
+fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = ev => loadImageSrc(ev.target.result);
+    reader.readAsDataURL(file);
+  }
+});
+
+canvas.addEventListener('mousedown', e => {
+  if (!imgLoaded) return;
+  const rect = canvas.getBoundingClientRect();
+  startX = e.clientX - rect.left;
+  startY = e.clientY - rect.top;
+  isDrawing = true;
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (!isDrawing) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  drawBoxes();
+  ctx.strokeStyle = '#f87171';
+  ctx.strokeRect(startX, startY, x - startX, y - startY);
+});
+
+canvas.addEventListener('mouseup', e => {
+  if (!isDrawing) return;
+  isDrawing = false;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  if (Math.abs(x - startX) < 5 && Math.abs(y - startY) < 5) {
+      drawBoxes();
+      return;
+  }
+  
+  currentBox = {
+    x: Math.min(startX, x),
+    y: Math.min(startY, y),
+    w: Math.abs(x - startX),
+    h: Math.abs(y - startY),
+  };
+  
+  showLabelModal();
+});
+
+undoBtn.addEventListener('click', () => {
+  if (boxes.length > 0) {
+    boxes.pop();
+    drawBoxes();
+  }
+});
+
+downloadBtn.addEventListener('click', () => {
+  if (!imgLoaded) return alert("Load an image first.");
+  const out = document.createElement('canvas');
+  out.width = img.width;
+  out.height = img.height;
+  const oc = out.getContext('2d');
+  oc.fillStyle = '#fff';
+  oc.fillRect(0, 0, out.width, out.height);
+  oc.drawImage(img, 0, 0);
+
+  const fontSize = Math.max(35, Math.round(out.width / 80));
+  const padding = Math.round(fontSize * 0.4);
+  oc.font = fontSize + "px Arial";
+
+  boxes.forEach(b => {
+    const scaleX = img.width / canvas.clientWidth;
+    const scaleY = img.height / canvas.clientHeight;
+    const bx = b.x * scaleX, by = b.y * scaleY, bw = b.w * scaleX, bh = b.h * scaleY;
+    oc.lineWidth = 5;
+    oc.strokeStyle = '#34d399';
+    oc.strokeRect(bx, by, bw, bh);
+
+    const text = b.label || "—";
+    const textW = oc.measureText(text).width;
+    const textH = fontSize;
+    let tx = bx;
+
+    
+    const rectHeight = textH + padding;
+    // Default position: Above the box, touching
+    let textBaselineY = by - (padding / 2);
+    let rectY = by - rectHeight;
+
+    // If it overflows the top, move it below, touching
+    if (rectY < 0) {
+        textBaselineY = by + bh + textH;
+        rectY = by + bh;
+    }
+    
+
+    if (tx + textW + padding * 2 > out.width) tx = out.width - (textW + padding * 2) - 4;
+    oc.fillStyle = 'rgba(52,211,153,0.95)';
+    oc.fillRect(tx - padding, rectY, textW + padding * 2, rectHeight);
+    oc.fillStyle = '#000000'; 
+    oc.fillText(text, tx, textBaselineY);
+  });
+
+  out.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'annotated.jpg';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, 'image/jpeg', 0.9);
+});
+
+let dragCounter = 0;
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+  document.addEventListener(evt, e => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+});
+document.addEventListener('dragenter', () => {
+  dragCounter++;
+  dropOverlay.classList.add('visible');
+});
+document.addEventListener('dragleave', () => {
+  dragCounter--;
+  if (dragCounter <= 0) {
+    dropOverlay.classList.remove('visible');
+  }
+});
+document.addEventListener('drop', e => {
+  dragCounter = 0;
+  dropOverlay.classList.remove('visible');
+  const files = e.dataTransfer.files;
+  if (files && files[0] && files[0].type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = ev => loadImageSrc(ev.target.result);
+    reader.readAsDataURL(files[0]);
+  }
+});
+</script>
+</body>
+</html>
