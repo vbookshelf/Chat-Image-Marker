@@ -2,7 +2,9 @@
 
 <br>
 
-A minimalist desktop web based tool to quickly mark up images when chatting with a multimodal Ai model. Works offline. Double-click to launch.
+A minimalist desktop web based tool to quickly mark up images when chatting with a multimodal Ai model. Works offline. Double-click to launch. 
+
+For a quick back-and-forth chat, a simple single-task tool means less friction.
 
 Created for students who use Ai as a tutor - both online and offline. 
 
