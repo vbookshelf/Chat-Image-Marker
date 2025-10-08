@@ -23,3 +23,5 @@ This tool is a standalone, offline application that simply runs inside your web 
 
 <img src="images/image1.png" alt="Ollama desktop app settings" height="500">
 <p>Chat Image Marker- Sample marked up chat screenshot</p>
+
+<br>
