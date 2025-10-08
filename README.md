@@ -18,3 +18,8 @@ Created for students who use Ai as a tutor - both online and offline.
 ## A Privacy-First Tool
 
 This tool is a standalone, offline application that simply runs inside your web browser. Your files and data remain completely under your control. No data leaves your machine. You can switch off your internet connection for added security.
+
+<br>
+
+<img src="images/image1.png" alt="Ollama desktop app settings" height="500">
+<p>Chat Image Marker- Sample marked up chat screenshot</p>
