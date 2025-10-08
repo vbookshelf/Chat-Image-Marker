@@ -19,6 +19,7 @@ Created for students who use Ai as a tutor - both online and offline.
 - Drop in your image
 - Click and drag to draw a bounding box
 - Quickly add a label
+- Use the marked-up image in your chat with an AI
 
 
 
@@ -32,6 +33,6 @@ This tool is a standalone, offline application that simply runs inside your web 
 <br>
 
 <img src="images/image1.png" alt="Ollama desktop app settings" height="500">
-<p>Chat Image Marker- Sample marked up chat screenshot</p>
+<p>Chat Image Marker- Sample marked-up chat screenshot</p>
 
 <br>
