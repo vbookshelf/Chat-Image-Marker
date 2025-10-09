@@ -37,3 +37,15 @@ This tool is a standalone, offline application that simply runs inside your web 
 <p>Chat Image Marker- Sample marked-up chat screenshot</p>
 
 <br>
+
+## App Family - Offline-First, Privacy-First
+
+- myOfflineAi-PrivacyFirst<br>(Maximum security. No chat history is saved.)<br>
+  https://github.com/vbookshelf/myOfflineAi-PrivacyFirst<br>
+- myOfflineAi-ChatHistory<br>(Saves chats to a local file you control.)<br>
+  https://github.com/vbookshelf/myOfflineAi-ChatHistory<br>
+- Chat-Image-Marker<br>(A simple, offline tool for marking up images.)<br>
+  https://github.com/vbookshelf/Chat-Image-Marker<br>
+
+<br>
+<br>
